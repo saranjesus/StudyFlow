@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Adaptive Study Planner & Timetable</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons for modern aesthetic -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar with Configuration Inputs -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <i class="fa-solid fa-graduation-cap logo-icon"></i>
+                <h2>StudyFlow</h2>
+                <span class="badge">Adaptive v1.0</span>
+            </div>
+            
+            <form id="planner-form" onsubmit="event.preventDefault();">
+                <!-- User Details Card -->
+                <div class="card accordion-card active">
+                    <div class="card-header" onclick="toggleAccordion(this)">
+                        <h3><i class="fa-regular fa-user"></i> Profile Details</h3>
+                        <i class="fa-solid fa-chevron-down arrow"></i>
+                    </div>
+                    <div class="card-content">
+                        <div class="form-group">
+                            <label for="user-name">Name</label>
+                            <input type="text" id="user-name" value="Alex Mercer" placeholder="Enter your name">
+                        </div>
+                        <div class="form-group">
+                            <label for="primary-goal">Primary Goal</label>
+                            <input type="text" id="primary-goal" value="Pass AWS Solutions Architect Certification" placeholder="e.g. Exam prep, skill building">
+                        </div>
+                        <div class="form-group">
+                            <label for="exam-deadline">Exam/Deadline Date</label>
+                            <input type="date" id="exam-deadline" value="2026-07-25">
+                            <small class="helper-text" id="days-left-badge"></small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Daily Sleep/Wake & Hours -->
+                <div class="card accordion-card active">
+                    <div class="card-header" onclick="toggleAccordion(this)">
+                        <h3><i class="fa-regular fa-clock"></i> Time & Rest</h3>
+                        <i class="fa-solid fa-chevron-down arrow"></i>
+                    </div>
+                    <div class="card-content">
+                        <div class="form-row">
+                            <div class="form-group col">
+                                <label for="wake-time">Wake Time</label>
+                                <input type="time" id="wake-time" value="07:00">
+                            </div>
+                            <div class="form-group col">
+                                <label for="sleep-time">Sleep Time</label>
+                                <input type="time" id="sleep-time" value="23:00">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group col">
+                                <label for="target-hours">Daily Target (Hours)</label>
+                                <input type="number" id="target-hours" value="6" min="1" max="16">
+                            </div>
+                            <div class="form-group col">
+                                <label for="session-length">Session Length (Min)</label>
+                                <select id="session-length">
+                                    <option value="25">25 mins (Short)</option>
+                                    <option value="50" selected>50 mins (Standard)</option>
+                                    <option value="90">90 mins (Deep Work)</option>
+                                    <option value="120">120 mins (Max)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Subjects & Priorities -->
+                <div class="card accordion-card active">
+                    <div class="card-header" onclick="toggleAccordion(this)">
+                        <h3><i class="fa-solid fa-book-bookmark"></i> Subjects & Allocation</h3>
+                        <i class="fa-solid fa-chevron-down arrow"></i>
+                    </div>
+                    <div class="card-content">
+                        <div id="subjects-container" class="list-container">
+                            <!-- Dynamic Subjects List -->
+                        </div>
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="addSubjectRow()">
+                            <i class="fa-solid fa-plus"></i> Add Subject
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Energy Windows -->
+                <div class="card accordion-card">
+                    <div class="card-header" onclick="toggleAccordion(this)">
+                        <h3><i class="fa-solid fa-bolt"></i> Peak Energy Windows</h3>
+                        <i class="fa-solid fa-chevron-down arrow"></i>
+                    </div>
+                    <div class="card-content">
+                        <div id="energy-container" class="list-container">
+                            <!-- Dynamic Energy Windows -->
+                        </div>
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="addEnergyRow()">
+                            <i class="fa-solid fa-plus"></i> Add Peak Window
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Fixed Commitments -->
+                <div class="card accordion-card">
+                    <div class="card-header" onclick="toggleAccordion(this)">
+                        <h3><i class="fa-solid fa-calendar-xmark"></i> Fixed Commitments</h3>
+                        <i class="fa-solid fa-chevron-down arrow"></i>
+                    </div>
+                    <div class="card-content">
+                        <div id="commitments-container" class="list-container">
+                            <!-- Dynamic Commitments -->
+                        </div>
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="addCommitmentRow()">
+                            <i class="fa-solid fa-plus"></i> Add Commitment
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Flexibility & Rules -->
+                <div class="card accordion-card">
+                    <div class="card-header" onclick="toggleAccordion(this)">
+                        <h3><i class="fa-solid fa-sliders"></i> Study Rules</h3>
+                        <i class="fa-solid fa-chevron-down arrow"></i>
+                    </div>
+                    <div class="card-content">
+                        <div class="form-group">
+                            <label for="flex-tolerance">Flexibility Tolerance</label>
+                            <select id="flex-tolerance">
+                                <option value="strict">Strict (Follow times precisely)</option>
+                                <option value="moderate" selected>Moderate (Buffer slots included)</option>
+                                <option value="high">High (Fluid, swap blocks easily)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Days Off or Light Days</label>
+                            <div class="checkbox-grid">
+                                <label class="checkbox-label"><input type="checkbox" id="day-0" value="0"> Sun</label>
+                                <label class="checkbox-label"><input type="checkbox" id="day-1" value="1"> Mon</label>
+                                <label class="checkbox-label"><input type="checkbox" id="day-2" value="2"> Tue</label>
+                                <label class="checkbox-label"><input type="checkbox" id="day-3" value="3"> Wed</label>
+                                <label class="checkbox-label"><input type="checkbox" id="day-4" value="4"> Thu</label>
+                                <label class="checkbox-label"><input type="checkbox" id="day-5" value="5"> Fri</label>
+                                <label class="checkbox-label"><input type="checkbox" id="day-6" value="6"> Sat</label>
+                            </div>
+                            <small class="helper-text">Checked days are scheduled with lighter workloads.</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="spaced-interval">Revision Schedule (Intervals)</label>
+                            <input type="text" id="spaced-interval" value="1d, 3d, 7d" placeholder="e.g. 1d, 3d, 7d, 14d">
+                        </div>
+                        <div class="form-group">
+                            <label>Active Study Methods</label>
+                            <div class="checkbox-list">
+                                <label class="checkbox-label"><input type="checkbox" class="study-method" value="Practice Problems" checked> Practice Problems</label>
+                                <label class="checkbox-label"><input type="checkbox" class="study-method" value="Flashcards" checked> Active Recall / Flashcards</label>
+                                <label class="checkbox-label"><input type="checkbox" class="study-method" value="Feynman Technique" checked> Summarizing & Teaching</label>
+                                <label class="checkbox-label"><input type="checkbox" class="study-method" value="Past Papers" checked> Timed Past Papers</label>
+                                <label class="checkbox-label"><input type="checkbox" class="study-method" value="Worked Examples" checked> Worked Examples Analysis</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Motivational Quotes -->
+                <div class="card accordion-card">
+                    <div class="card-header" onclick="toggleAccordion(this)">
+                        <h3><i class="fa-solid fa-quote-left"></i> Motivational Cues</h3>
+                        <i class="fa-solid fa-chevron-down arrow"></i>
+                    </div>
+                    <div class="card-content">
+                        <div class="form-group">
+                            <label for="quote-start">Morning Kick-Off Quote</label>
+                            <input type="text" id="quote-start" value="The secret of getting ahead is getting started.">
+                        </div>
+                        <div class="form-group">
+                            <label for="quote-mid">Mid-Session Energy Booster</label>
+                            <input type="text" id="quote-mid" value="One block closer to your goal. Focus is power!">
+                        </div>
+                        <div class="form-group">
+                            <label for="quote-end">End-of-Day Gratitude</label>
+                            <input type="text" id="quote-end" value="Consistent effort compounded daily yields massive results.">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="sidebar-footer">
+                    <button type="button" class="btn btn-primary btn-block" onclick="generateSchedule()">
+                        <i class="fa-solid fa-arrows-rotate"></i> Generate Timetables
+                    </button>
+                </div>
+            </form>
+        </aside>
+
+        <!-- Main Display Panel -->
+        <main class="main-content">
+            <!-- Top Alert Bar / Exam Countdown -->
+            <div id="countdown-banner" class="countdown-banner hidden">
+                <i class="fa-solid fa-triangle-exclamation warning-icon"></i>
+                <span id="countdown-text">Upcoming Exam Focus: Your exam is in 28 days! Past Papers and Exam Simulation are prioritized in your schedule.</span>
+            </div>
+
+            <!-- Dashboard Welcome -->
+            <div class="dashboard-header">
+                <div>
+                    <h1 id="welcome-title">Hello, Alex Mercer</h1>
+                    <p class="subtitle" id="welcome-goal">Primary Goal: Pass AWS Solutions Architect Certification</p>
+                </div>
+                <div class="action-buttons">
+                    <button class="btn btn-outline" onclick="exportJSON()">
+                        <i class="fa-solid fa-download"></i> Copy JSON
+                    </button>
+                    <button class="btn btn-outline btn-print" onclick="window.print()">
+                        <i class="fa-solid fa-print"></i> Print
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tab Navigation -->
+            <nav class="tab-navigation">
+                <button class="tab-btn active" onclick="switchTab('tab-typical')">
+                    <i class="fa-solid fa-calendar-day"></i> Typical Day
+                </button>
+                <button class="tab-btn" onclick="switchTab('tab-heavy')">
+                    <i class="fa-solid fa-fire"></i> Heavy Day
+                </button>
+                <button class="tab-btn" onclick="switchTab('tab-light')">
+                    <i class="fa-solid fa-mug-hot"></i> Light/Recovery
+                </button>
+                <button class="tab-btn" onclick="switchTab('tab-weekly')">
+                    <i class="fa-solid fa-calendar-week"></i> Weekly Grid
+                </button>
+                <button class="tab-btn" onclick="switchTab('tab-spaced')">
+                    <i class="fa-solid fa-rotate-left"></i> Revision Plan
+                </button>
+                <button class="tab-btn" onclick="switchTab('tab-json')">
+                    <i class="fa-solid fa-code"></i> JSON Export
+                </button>
+            </nav>
+
+            <!-- Tab Contents -->
+            <div class="tab-panels">
+                
+                <!-- Typical Day Panel -->
+                <div id="tab-typical" class="tab-panel active">
+                    <div class="quote-card start-quote">
+                        <i class="fa-solid fa-quote-left icon"></i>
+                        <p class="quote-text" id="typical-quote-start"></p>
+                    </div>
+                    <div class="table-container">
+                        <table class="timetable-table">
+                            <thead>
+                                <tr>
+                                    <th>Time Range</th>
+                                    <th>Duration</th>
+                                    <th>Focus Area / Subject</th>
+                                    <th>Activity Type & Method</th>
+                                    <th>Status / Rule</th>
+                                </tr>
+                            </thead>
+                            <tbody id="typical-timetable-body">
+                                <!-- Dynamic Rows -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="quote-card end-quote">
+                        <i class="fa-solid fa-quote-left icon"></i>
+                        <p class="quote-text" id="typical-quote-end"></p>
+                    </div>
+                </div>
+
+                <!-- Heavy Day Panel -->
+                <div id="tab-heavy" class="tab-panel">
+                    <div class="panel-info-banner">
+                        <i class="fa-solid fa-circle-info"></i>
+                        <span><strong>Heavy Study Day:</strong> Boosts the study target by 1.5x. Designed for peak energy windows or weekends when you have high stamina. Includes Pomodoro active recall sprints.</span>
+                    </div>
+                    <div class="quote-card start-quote">
+                        <i class="fa-solid fa-quote-left icon"></i>
+                        <p class="quote-text" id="heavy-quote-start"></p>
+                    </div>
+                    <div class="table-container">
+                        <table class="timetable-table">
+                            <thead>
+                                <tr>
+                                    <th>Time Range</th>
+                                    <th>Duration</th>
+                                    <th>Focus Area / Subject</th>
+                                    <th>Activity Type & Method</th>
+                                    <th>Status / Rule</th>
+                                </tr>
+                            </thead>
+                            <tbody id="heavy-timetable-body">
+                                <!-- Dynamic Rows -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="quote-card end-quote">
+                        <i class="fa-solid fa-quote-left icon"></i>
+                        <p class="quote-text" id="heavy-quote-end"></p>
+                    </div>
+                </div>
+
+                <!-- Light Day Panel -->
+                <div id="tab-light" class="tab-panel">
+                    <div class="panel-info-banner">
+                        <i class="fa-solid fa-circle-info"></i>
+                        <span><strong>Light/Recovery Day:</strong> Reduced load (50% study time). Prioritizes spaced repetition review, low-intensity flashcard sweeps, and allows mental recharge.</span>
+                    </div>
+                    <div class="quote-card start-quote">
+                        <i class="fa-solid fa-quote-left icon"></i>
+                        <p class="quote-text" id="light-quote-start"></p>
+                    </div>
+                    <div class="table-container">
+                        <table class="timetable-table">
+                            <thead>
+                                <tr>
+                                    <th>Time Range</th>
+                                    <th>Duration</th>
+                                    <th>Focus Area / Subject</th>
+                                    <th>Activity Type & Method</th>
+                                    <th>Status / Rule</th>
+                                </tr>
+                            </thead>
+                            <tbody id="light-timetable-body">
+                                <!-- Dynamic Rows -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="quote-card end-quote">
+                        <i class="fa-solid fa-quote-left icon"></i>
+                        <p class="quote-text" id="light-quote-end"></p>
+                    </div>
+                </div>
+
+                <!-- Weekly Grid Panel -->
+                <div id="tab-weekly" class="tab-panel">
+                    <div class="weekly-meta">
+                        <div class="meta-card">
+                            <span class="value" id="weekly-total-hours">0 hrs</span>
+                            <span class="label">Total Planned Weekly Study</span>
+                        </div>
+                        <div class="meta-card">
+                            <span class="value" id="weekly-high-priority-days">Mon, Wed, Fri</span>
+                            <span class="label">Priority Focus Days</span>
+                        </div>
+                    </div>
+                    <div class="weekly-grid-container" id="weekly-grid-body">
+                        <!-- Dynamic Weekly subject progress indicators -->
+                    </div>
+                </div>
+
+                <!-- Spaced Repetition Panel -->
+                <div id="tab-spaced" class="tab-panel">
+                    <div class="spaced-rep-intro">
+                        <p>Your revision schedule utilizes <strong>Spaced Repetition</strong>. As you complete active study sessions, review the material at these intervals to secure long-term memory encoding.</p>
+                    </div>
+                    <div class="spaced-cards-grid" id="spaced-rep-grid">
+                        <!-- Spaced repetition review schedules per subject -->
+                    </div>
+                </div>
+
+                <!-- JSON Export Panel -->
+                <div id="tab-json" class="tab-panel">
+                    <div class="json-header">
+                        <p>Copy or export this JSON structure to load into calendar apps, study trackers, or custom integrations.</p>
+                        <button class="btn btn-secondary btn-sm" onclick="copyJSONText()">
+                            <i class="fa-regular fa-copy"></i> Copy Code
+                        </button>
+                    </div>
+                    <pre class="json-code-block"><code id="json-output">Generating...</code></pre>
+                </div>
+            </div>
+
+            <!-- Adaptation Guidelines Section -->
+            <section class="adaptation-section">
+                <h2><i class="fa-solid fa-shuffle"></i> Adaptive Swapping Rules</h2>
+                <div class="rules-grid">
+                    <div class="rule-card">
+                        <div class="rule-icon"><i class="fa-solid fa-clock-rotate-left"></i></div>
+                        <div>
+                            <h4>Missed Session Catch-up</h4>
+                            <p>If you miss a session, do not panic. Auto-shift the block into the next available "Buffer / Overflow" slot. Do not skip the revision or high-priority blocks.</p>
+                        </div>
+                    </div>
+                    <div class="rule-card">
+                        <div class="rule-icon"><i class="fa-solid fa-arrows-left-right"></i></div>
+                        <div>
+                            <h4>Symmetric Swapping</h4>
+                            <p>You can swap a High-priority slot with a Low-priority slot if your energy levels are low, but you must exchange them later in the week to maintain targets.</p>
+                        </div>
+                    </div>
+                    <div class="rule-card">
+                        <div class="rule-icon"><i class="fa-solid fa-shield-halved"></i></div>
+                        <div>
+                            <h4>Energy Optimization Rule</h4>
+                            <p>If you wake up tired, slide the "Core Focus" sessions to your second peak energy window and utilize the morning window for low-energy tasks like flashcard reviews.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="toast hidden">Copied to clipboard!</div>
+
+    <!-- Javascript links -->
+    <script src="app.js"></script>
+</body>
+</html>
